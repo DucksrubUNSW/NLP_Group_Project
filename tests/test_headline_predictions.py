@@ -25,6 +25,7 @@ DEVICE = torch.device(
 
 # These tests check the predictions of the fine-tuned BERT and RoBERTa models on a set of 10 true and 10 false headlines. The current pass rate is 27/40.
 # Useful for evaluation stage of assignment
+# Usage: python -m pytest tests/test_headline_predictions.py -v
 
 def predict_bert(text: str) -> str:
     tokenizer = BertTokenizer.from_pretrained(BERT_DIR)
