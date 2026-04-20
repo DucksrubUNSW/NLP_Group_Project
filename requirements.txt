@@ -4,3 +4,10 @@ datasets
 joblib
 torch
 transformers
+langchain
+pytest
+google-search-results
+langgraph
+langchain-google-genai
+pydantic
+langchain_community
