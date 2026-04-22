@@ -7,6 +7,7 @@
 import argparse
 from pathlib import Path
 import os
+from typing import Literal
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.tools import tool
@@ -24,10 +25,10 @@ from transformers import (
 
 
 # Free key (can sign up to gemini api free tier) - Rate limited
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDFCzFAPqyEDdxL2ew5B26ChS-9svCJBns"
+os.environ["GOOGLE_API_KEY"] = ""
 
 # paid key (Course gave $50 credit)
-os.environ["GOOGLE_API_KEY"] = ""
+#os.environ["GOOGLE_API_KEY"] = ""
 os.environ["SERPER_API_KEY"] = "551da4c7939253fd9f113d0c8fb9612eeeba4103"
 
 
@@ -48,7 +49,17 @@ class FakeNewsAnalysis(BaseModel):
     confidence_score: float = Field(description="A score from 0 to 1 indicating the model's certainty.")
     reasoning: str = Field(description="A brief explanation based on search results.")
 
+
+class ThreeClassEvidenceAnalysis(BaseModel):
+    verdict: Literal["true", "mixed", "false"] = Field(
+        description="Evidence-based verdict using the project's true/mixed/false label scheme."
+    )
+    confidence_score: float = Field(description="A score from 0 to 1 indicating the evidence verdict certainty.")
+    reasoning: str = Field(description="A brief explanation grounded in the retrieved evidence.")
+    sources: list[str] = Field(description="Source names or URLs used as evidence.")
+
 structured_llm = model.with_structured_output(FakeNewsAnalysis)
+structured_three_class_llm = model.with_structured_output(ThreeClassEvidenceAnalysis)
 
 @tool
 def google_search(query: str) -> str:
@@ -78,11 +89,71 @@ Headline: {headline}
 
     return final_report
 
+
+def analyze_headline_three_class(headline: str, base_label: str, base_confidence: float | None):
+    confidence_text = (
+        f"{base_confidence:.4f}" if base_confidence is not None else "not available"
+    )
+    prompt = f"""
+You are an expert adversarial fact-checker. Your goal is to evaluate a headline using the project's three labels.
+
+The only allowed labels are:
+- true: reliable evidence supports the main claim
+- mixed: the claim is partially true, ambiguous, lacks enough evidence, or sources conflict
+- false: reliable evidence refutes the main claim or indicates the claim is fabricated
+
+Base model prediction: {base_label}
+Base model confidence: {confidence_text}
+
+Identify the core factual claim.
+
+Use the search tool to find reputable primary sources (Associated Press, Reuters, official government sites, official statistics sources, or established fact-checkers) that confirm, partially support, complicate, or refute this claim.
+
+If the retrieved evidence is unclear, incomplete, or conflicting, use the mixed label.
+
+Headline: {headline}
+    """
+    result = agent.invoke({"messages": [("user", prompt)]})
+
+    final_report = structured_three_class_llm.invoke(result["messages"])
+
+    return final_report
+
+
+def combine_predictions(
+    base_label: str,
+    base_confidence: float | None,
+    evidence_report: ThreeClassEvidenceAnalysis | None,
+) -> str:
+    if evidence_report is None:
+        return base_label
+
+    evidence_label = evidence_report.verdict
+    evidence_confidence = evidence_report.confidence_score
+
+    # Keep the model prediction by default. LLM confidence is often
+    # overconfident, so retrieval should only override uncertain model outputs.
+    if evidence_label == base_label:
+        return base_label
+
+    if base_confidence is None:
+        if evidence_confidence >= 0.95:
+            return evidence_label
+        return base_label
+
+    if base_confidence < 0.50 and evidence_confidence >= 0.95:
+        return evidence_label
+
+    if base_confidence < 0.60 and evidence_label == "mixed" and evidence_confidence >= 0.95:
+        return "mixed"
+
+    return base_label
+
 def predict_baseline(text: str):
     model = joblib.load(PROJECT_ROOT / "baseline_model.pkl")
     vectoriser = joblib.load(PROJECT_ROOT / "baseline_vectoriser.pkl")
-    pred_id = int(model.predict(vectoriser.transform([text]))[0])
-    return LABELS.get(pred_id, str(pred_id)), None
+    prediction = model.predict(vectoriser.transform([text]))[0]
+    return str(prediction), None
 
 def predict_bert(headline: str):
     model_dir = PROJECT_ROOT / "bert_finetuned"
@@ -162,6 +233,19 @@ def main():
     print(f"Is Real: {report.is_real}")
     print(f"Score: {report.confidence_score}")
     print(f"Reason: {report.reasoning}")
+
+    print()
+    evidence_report = analyze_headline_three_class(text, label, confidence)
+    final_prediction = combine_predictions(label, confidence, evidence_report)
+    print("Retrieval-Augmented Classification:")
+    print(f"Evidence Verdict: {evidence_report.verdict}")
+    print(f"Evidence Confidence: {evidence_report.confidence_score:.4f}")
+    print(f"Final Prediction: {final_prediction}")
+    print(f"Evidence Reason: {evidence_report.reasoning}")
+    if evidence_report.sources:
+        print("Sources:")
+        for source in evidence_report.sources:
+            print(f"- {source}")
 
 
 if __name__ == "__main__":
