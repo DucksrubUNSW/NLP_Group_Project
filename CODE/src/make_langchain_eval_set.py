@@ -4,11 +4,13 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 from data_loader import load_combined
 
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "data" / "langchain_eval_cases.csv"
+TEST_SPLIT_RANDOM_STATE = 42
 
 
 def parse_args():
@@ -38,12 +40,22 @@ def main():
     args = parse_args()
     df = load_combined()
 
+    # Recreate the same held-out 20% test split used by bert_model.py so the
+    # LangChain evaluation samples only from data the transformers were not
+    # trained or validated on.
+    _, test_df = train_test_split(
+        df,
+        test_size=0.2,
+        random_state=TEST_SPLIT_RANDOM_STATE,
+        stratify=df["label"],
+    )
+
     samples = []
     for label in ["false", "mixed", "true"]:
-        label_df = df[df["label"] == label]
+        label_df = test_df[test_df["label"] == label]
         if len(label_df) < args.per_label:
             raise ValueError(
-                f"Requested {args.per_label} examples for {label}, but only found {len(label_df)}."
+                f"Requested {args.per_label} examples for {label}, but only found {len(label_df)} in the held-out test split."
             )
         samples.append(label_df.sample(n=args.per_label, random_state=args.seed))
 
@@ -56,7 +68,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     sample.to_csv(args.output, index=False)
 
-    print(f"Saved {len(sample)} examples to {args.output}")
+    print(f"Saved {len(sample)} held-out test examples to {args.output}")
     print(sample["label"].value_counts())
 
 

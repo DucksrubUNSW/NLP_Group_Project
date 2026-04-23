@@ -11,6 +11,7 @@ from cli_test import analyze_headline_three_class, combine_predictions, predict_
 
 
 DEFAULT_INPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "data" / "langchain_eval_cases.csv"
+DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "test_results" / "langchain_results.txt"
 LABEL_ORDER = ["false", "mixed", "true"]
 
 
@@ -40,27 +41,67 @@ def parse_args():
         default=None,
         help="Optional number of rows to evaluate for a quick test.",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_OUTPUT,
+        help="Text file for per-example predictions.",
+    )
     return parser.parse_args()
 
 
 def evaluate(df: pd.DataFrame, model_name: str):
     y_true = []
     y_base = []
-    y_augmented = []
+    y_langchain = []
+    y_wordnet = []
     overrides = Counter()
+    wordnet_overrides = Counter()
     corrected = 0
     worsened = 0
     unchanged_correct = 0
     unchanged_wrong = 0
+    wordnet_corrected = 0
+    wordnet_worsened = 0
+    wordnet_unchanged_correct = 0
+    wordnet_unchanged_wrong = 0
+    rows = []
 
     for row in df.itertuples(index=False):
         base_label, base_confidence = predict(model_name, row.text)
-        evidence_report = analyze_headline_three_class(row.text, base_label, base_confidence)
+        evidence_report = analyze_headline_three_class(
+            row.text,
+            base_label,
+            base_confidence,
+            use_wordnet=False,
+        )
+        wordnet_report = analyze_headline_three_class(
+            row.text,
+            base_label,
+            base_confidence,
+            use_wordnet=True,
+        )
         final_label = combine_predictions(base_label, base_confidence, evidence_report)
+        wordnet_label = combine_predictions(base_label, base_confidence, wordnet_report)
 
         y_true.append(row.label)
         y_base.append(base_label)
-        y_augmented.append(final_label)
+        y_langchain.append(final_label)
+        y_wordnet.append(wordnet_label)
+        rows.append(
+            {
+                "text": row.text,
+                "gold": row.label,
+                "base_label": base_label,
+                "base_confidence": base_confidence,
+                "langchain_label": final_label,
+                "langchain_evidence": evidence_report.verdict,
+                "langchain_confidence": evidence_report.confidence_score,
+                "wordnet_label": wordnet_label,
+                "wordnet_evidence": wordnet_report.verdict,
+                "wordnet_confidence": wordnet_report.confidence_score,
+            }
+        )
 
         if final_label != base_label:
             overrides[(base_label, final_label)] += 1
@@ -73,7 +114,34 @@ def evaluate(df: pd.DataFrame, model_name: str):
         else:
             unchanged_wrong += 1
 
-    return y_true, y_base, y_augmented, overrides, corrected, worsened, unchanged_correct, unchanged_wrong
+        if wordnet_label != base_label:
+            wordnet_overrides[(base_label, wordnet_label)] += 1
+            if base_label != row.label and wordnet_label == row.label:
+                wordnet_corrected += 1
+            elif base_label == row.label and wordnet_label != row.label:
+                wordnet_worsened += 1
+        elif wordnet_label == row.label:
+            wordnet_unchanged_correct += 1
+        else:
+            wordnet_unchanged_wrong += 1
+
+    return (
+        y_true,
+        y_base,
+        y_langchain,
+        y_wordnet,
+        overrides,
+        wordnet_overrides,
+        corrected,
+        worsened,
+        unchanged_correct,
+        unchanged_wrong,
+        wordnet_corrected,
+        wordnet_worsened,
+        wordnet_unchanged_correct,
+        wordnet_unchanged_wrong,
+        rows,
+    )
 
 
 def print_metrics(title: str, y_true: list[str], y_pred: list[str]):
@@ -85,6 +153,44 @@ def print_metrics(title: str, y_true: list[str], y_pred: list[str]):
     print(classification_report(y_true, y_pred, labels=LABEL_ORDER, digits=4))
     print("Confusion Matrix:")
     print(confusion_matrix(y_true, y_pred, labels=LABEL_ORDER))
+
+
+def write_prediction_report(
+    output_path: Path,
+    model_name: str,
+    rows: list[dict],
+):
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with output_path.open("w", encoding="utf-8") as file:
+        file.write(f"Model: {model_name}\n")
+        file.write(f"Examples evaluated: {len(rows)}\n")
+        file.write("=" * 80 + "\n\n")
+
+        for index, row in enumerate(rows, start=1):
+            base_confidence = row["base_confidence"]
+            base_confidence_text = (
+                f"{base_confidence:.4f}" if base_confidence is not None else "N/A"
+            )
+            file.write(f"{index}. Headline: {row['text']}\n")
+            file.write(f"Gold Label: {row['gold']}\n")
+            file.write(
+                f"{model_name.upper()} Prediction: {row['base_label']} "
+                f"(confidence: {base_confidence_text})\n"
+            )
+            file.write(
+                "LangChain Prediction: "
+                f"{row['langchain_label']} "
+                f"(evidence verdict: {row['langchain_evidence']}, "
+                f"confidence: {row['langchain_confidence']:.4f})\n"
+            )
+            file.write(
+                "LangChain + WordNet Prediction: "
+                f"{row['wordnet_label']} "
+                f"(evidence verdict: {row['wordnet_evidence']}, "
+                f"confidence: {row['wordnet_confidence']:.4f})\n"
+            )
+            file.write("-" * 80 + "\n")
 
 
 def main():
@@ -105,18 +211,26 @@ def main():
     (
         y_true,
         y_base,
-        y_augmented,
+        y_langchain,
+        y_wordnet,
         overrides,
+        wordnet_overrides,
         corrected,
         worsened,
         unchanged_correct,
         unchanged_wrong,
+        wordnet_corrected,
+        wordnet_worsened,
+        wordnet_unchanged_correct,
+        wordnet_unchanged_wrong,
+        rows,
     ) = evaluate(df, args.model)
 
     print(f"Model: {args.model}")
     print(f"Examples evaluated: {len(df)}")
     print_metrics(f"{args.model.upper()} ONLY", y_true, y_base)
-    print_metrics(f"{args.model.upper()} + LANGCHAIN", y_true, y_augmented)
+    print_metrics(f"{args.model.upper()} + LANGCHAIN", y_true, y_langchain)
+    print_metrics(f"{args.model.upper()} + LANGCHAIN + WORDNET", y_true, y_wordnet)
 
     print("\nOverrides:")
     if not overrides:
@@ -130,6 +244,22 @@ def main():
     print(f"Made worse by LangChain: {worsened}")
     print(f"Unchanged correct: {unchanged_correct}")
     print(f"Unchanged wrong: {unchanged_wrong}")
+
+    print("\nWordNet Overrides:")
+    if not wordnet_overrides:
+        print("None")
+    else:
+        for (old_label, new_label), count in sorted(wordnet_overrides.items()):
+            print(f"{old_label} -> {new_label}: {count}")
+
+    print("\nWordNet Override Impact:")
+    print(f"Corrected by LangChain + WordNet: {wordnet_corrected}")
+    print(f"Made worse by LangChain + WordNet: {wordnet_worsened}")
+    print(f"Unchanged correct: {wordnet_unchanged_correct}")
+    print(f"Unchanged wrong: {wordnet_unchanged_wrong}")
+
+    write_prediction_report(args.output, args.model, rows)
+    print(f"\nPer-example predictions written to: {args.output}")
 
 
 if __name__ == "__main__":

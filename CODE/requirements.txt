@@ -11,4 +11,5 @@ langgraph
 langchain-google-genai
 pydantic
 langchain_community
+nltk
 gradio
