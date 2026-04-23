@@ -83,6 +83,21 @@ python cli_test.py --model roberta --text "The unemployment rate has dropped to 
 python cli_test.py --model baseline --text "The unemployment rate has dropped to its lowest point in 50 years"
 ```
 
+## Gradio Demo
+
+A web-based demo lets you enter a headline, pick a model, and see the prediction and confidence in your browser.
+
+```bash
+python demo.py
+```
+
+This opens a local webpage with:
+- A text box for the headline
+- A dropdown to select **Baseline**, **BERT**, or **RoBERTa**
+- Prediction and confidence displayed below
+
+Optionally, expand the **RAG / LLM Analysis** section, tick the checkbox, and paste your Google Gemini API key to also run evidence-based fact-checking via LangChain + Google Search (uses the same keys described in the CLI section above).
+
 ## Running Tests
 
 ```bash
@@ -105,9 +120,13 @@ NewsGroup/
 │       ├── data_loader.py
 │       ├── baseline_model.py
 │       ├── bert_model.py
-│       ├── test_models.py
+│       ├── cli_test.py
+│       ├── conftest.py
+│       ├── demo.py
+│       ├── evaluate_langchain.py
+│       ├── make_langchain_eval_set.py
 │       ├── test_headline_predictions.py
-│       └── cli_test.py
+│       └── test_models.py
 └── MISC/
     ├── data/
     │   ├── liar/
