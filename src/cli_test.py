@@ -27,7 +27,7 @@ from wordnet_query_expansion import expand_search_queries
 
 
 # Free key (can sign up to gemini api free tier) - Rate limited
-os.environ["GOOGLE_API_KEY"] = "AIzaSyC2Ki8AX-K0dzSwHK971TuRusvIKPa407c"
+os.environ["GOOGLE_API_KEY"] = ""
 
 # paid key (Course gave $50 credit)
 #os.environ["GOOGLE_API_KEY"] = ""
