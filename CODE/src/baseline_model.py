@@ -1,12 +1,20 @@
+#!/usr/bin/env python3
+
+# baseline_model.py
 # baseline model: TF-IDF + Logistic Regression for misinformation detection
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+import os
 import joblib
 
+# relative to CODE/src/
+MODELS_DIR = os.path.join("..", "..", "MISC", "models")
+
 from data_loader import load_combined
+
 
 def train_baseline():
     print("Loading data...")
@@ -58,10 +66,12 @@ def train_baseline():
     print(confusion_matrix(y_test, y_pred))
 
     # save so we can load later for comparison
-    joblib.dump(model, "baseline_model.pkl")
-    joblib.dump(vectoriser, "baseline_vectoriser.pkl")
-    print("\nModel saved to baseline_model.pkl")
-    print("Vectoriser saved to baseline_vectoriser.pkl")
+    baseline_dir = os.path.join(MODELS_DIR, "baseline")
+    os.makedirs(baseline_dir, exist_ok=True)
+    joblib.dump(model, os.path.join(baseline_dir, "baseline_model.pkl"))
+    joblib.dump(vectoriser, os.path.join(baseline_dir, "baseline_vectoriser.pkl"))
+    print(f"\nModel saved to {baseline_dir}/baseline_model.pkl")
+    print(f"Vectoriser saved to {baseline_dir}/baseline_vectoriser.pkl")
 
     return model, vectoriser
 

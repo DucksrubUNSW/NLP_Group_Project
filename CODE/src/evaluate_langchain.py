@@ -10,9 +10,8 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from cli_test import analyze_headline_three_class, combine_predictions, predict_bert, predict_roberta
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_INPUT = PROJECT_ROOT / "data" / "langchain_eval_cases.csv"
-DEFAULT_OUTPUT = PROJECT_ROOT / "test_results.txt"
+DEFAULT_INPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "data" / "langchain_eval_cases.csv"
+DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "test_results" / "langchain_results.txt"
 LABEL_ORDER = ["false", "mixed", "true"]
 
 
