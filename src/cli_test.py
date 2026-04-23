@@ -23,9 +23,11 @@ from transformers import (
     RobertaForSequenceClassification,
 )
 
+from wordnet_query_expansion import expand_search_queries
+
 
 # Free key (can sign up to gemini api free tier) - Rate limited
-os.environ["GOOGLE_API_KEY"] = ""
+os.environ["GOOGLE_API_KEY"] = "AIzaSyC2Ki8AX-K0dzSwHK971TuRusvIKPa407c"
 
 # paid key (Course gave $50 credit)
 #os.environ["GOOGLE_API_KEY"] = ""
@@ -66,7 +68,17 @@ def google_search(query: str) -> str:
     """Search Google for fact-checking evidence."""
     return search.run(query)
 
+
+@tool
+def google_search_wordnet(query: str) -> str:
+    """Search Google for fact-checking evidence using WordNet-expanded query variants."""
+    results = []
+    for expanded_query in expand_search_queries(query):
+        results.append(f"Query: {expanded_query}\n{search.run(expanded_query)}")
+    return "\n\n".join(results)
+
 agent = create_agent(model, tools=[google_search])
+wordnet_agent = create_agent(model, tools=[google_search_wordnet])
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -76,7 +88,7 @@ You are an expert adversarial fact-checker. Your goal is to debunk misinformatio
 
 Identify the core factual claim.
 
-Use the search tool to find reputable primary sources (Associated Press, Reuters, official government sites) that either confirm or explicitly refute this claim.
+Use the search tool to find reputable primary sources (Associated Press, Reuters, official government sites) that either confirm or explicitly refute this claim. The search tool may use WordNet-expanded query variants to retrieve evidence with different wording.
 
 If no reputable source mentions this 'major' news, treat that silence as a strong signal that it is fake.
 
@@ -90,7 +102,12 @@ Headline: {headline}
     return final_report
 
 
-def analyze_headline_three_class(headline: str, base_label: str, base_confidence: float | None):
+def analyze_headline_three_class(
+    headline: str,
+    base_label: str,
+    base_confidence: float | None,
+    use_wordnet: bool = False,
+):
     confidence_text = (
         f"{base_confidence:.4f}" if base_confidence is not None else "not available"
     )
@@ -113,7 +130,8 @@ If the retrieved evidence is unclear, incomplete, or conflicting, use the mixed 
 
 Headline: {headline}
     """
-    result = agent.invoke({"messages": [("user", prompt)]})
+    selected_agent = wordnet_agent if use_wordnet else agent
+    result = selected_agent.invoke({"messages": [("user", prompt)]})
 
     final_report = structured_three_class_llm.invoke(result["messages"])
 
@@ -202,6 +220,11 @@ def parse_args():
         required=True,
         help="Headline text to classify.",
     )
+    parser.add_argument(
+        "--use-wordnet",
+        action="store_true",
+        help="Use WordNet-expanded query variants in the retrieval-augmented classification step.",
+    )
     return parser.parse_args()
 
 
@@ -235,9 +258,15 @@ def main():
     print(f"Reason: {report.reasoning}")
 
     print()
-    evidence_report = analyze_headline_three_class(text, label, confidence)
+    evidence_report = analyze_headline_three_class(
+        text,
+        label,
+        confidence,
+        use_wordnet=args.use_wordnet,
+    )
     final_prediction = combine_predictions(label, confidence, evidence_report)
     print("Retrieval-Augmented Classification:")
+    print(f"WordNet Query Expansion: {args.use_wordnet}")
     print(f"Evidence Verdict: {evidence_report.verdict}")
     print(f"Evidence Confidence: {evidence_report.confidence_score:.4f}")
     print(f"Final Prediction: {final_prediction}")

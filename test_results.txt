@@ -1,36 +1,184 @@
-Test Cases (Results from bert and roberta) - For manual evaluation of the models' performance on true and false news articles:
+Model: roberta
+Examples evaluated: 30
+================================================================================
 
-True test cases (Not fake):
-
-Watch Carrie Underwood Open Super Bowl 52 With Her New Video for “The Champion”
-bert - false
-roberta - true
-
-Real Housewives Mysteries: The Stolen Homes, Mystery Lovers and Friendship-Ending Fights That Rocked the Franchise
-bert - true
-roberta - true
-
-Kathy Griffin ‘No Longer Sorry’ About Trump Photo Shoot – Rolling Stone
-bert - true
-roberta - false
-
-
-
-
-False test cases (Fake):
-
-Did Miley Cyrus and Liam Hemsworth secretly get married?
-bert - false
-roberta - false
-
-Paris Jackson & Cara Delevingne Enjoy Night Out In Matching Outfits: They Have ‘Amazing Chemistry’
-bert - false
-roberta - false
-
-Celebrities Join Tax March in Protest of Donald Trump
-bert - false
-roberta - true
-
-Cindy Crawford's daughter Kaia Gerber wears a wig after dining with Harry Styles
-bert - false
-roberta - false
+1. Headline: When Republicans last controlled the presidency and Congress, the number of people on food stamps (and) the number of people in low-income housing went through the roof.
+Gold Label: true
+ROBERTA Prediction: mixed (confidence: 0.6682)
+LangChain Prediction: mixed (evidence verdict: false, confidence: 0.9000)
+LangChain + WordNet Prediction: mixed (evidence verdict: mixed, confidence: 0.8000)
+--------------------------------------------------------------------------------
+2. Headline: Says Detroit dumping a bunch of sewage in Lake Erie causes big problems for Ohio.
+Gold Label: mixed
+ROBERTA Prediction: false (confidence: 0.4642)
+LangChain Prediction: false (evidence verdict: true, confidence: 0.9000)
+LangChain + WordNet Prediction: false (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+3. Headline: Were fifth in the world (in executions), behind China, Iran, Iraq and Saudi Arabia.
+Gold Label: true
+ROBERTA Prediction: true (confidence: 0.7409)
+LangChain Prediction: true (evidence verdict: false, confidence: 0.9000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.5000)
+--------------------------------------------------------------------------------
+4. Headline: Compared to President Obama,President Reagan rushed home from Santa Barbara vacation, from the Reagan ranch when the Korean jetliner was shot out of the air by the Russians.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.3967)
+LangChain Prediction: mixed (evidence verdict: true, confidence: 0.9000)
+LangChain + WordNet Prediction: mixed (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+5. Headline: "When the Fair Tax becomes law, it will be like waving a magic wand releasing us from pain and unfairness."
+Gold Label: false
+ROBERTA Prediction: false (confidence: 0.8599)
+LangChain Prediction: false (evidence verdict: false, confidence: 0.9000)
+LangChain + WordNet Prediction: false (evidence verdict: mixed, confidence: 0.9000)
+--------------------------------------------------------------------------------
+6. Headline: Pope Francis: Gun Owners 'Can’t Call Themselves Christian' Anymore
+Gold Label: false
+ROBERTA Prediction: false (confidence: 0.9722)
+LangChain Prediction: false (evidence verdict: false, confidence: 0.9500)
+LangChain + WordNet Prediction: false (evidence verdict: mixed, confidence: 0.8000)
+--------------------------------------------------------------------------------
+7. Headline: Says the Army is spending $7 million to sponsor a NASCAR team.
+Gold Label: true
+ROBERTA Prediction: false (confidence: 0.5356)
+LangChain Prediction: false (evidence verdict: true, confidence: 0.9500)
+LangChain + WordNet Prediction: false (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+8. Headline: Says Connie Mack IV has been a promoter for Hooters with a history of bar room brawling, altercations and road rage.
+Gold Label: true
+ROBERTA Prediction: false (confidence: 0.5748)
+LangChain Prediction: false (evidence verdict: true, confidence: 0.9500)
+LangChain + WordNet Prediction: false (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+9. Headline: It was Dan Sullivan who wrote a bill to cut Alaskans out of those decisions about where they can hunt and fish.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.6991)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.5500)
+LangChain + WordNet Prediction: mixed (evidence verdict: mixed, confidence: 0.7000)
+--------------------------------------------------------------------------------
+10. Headline: Says I was the first governor in America to endorse Mitt Romney.
+Gold Label: false
+ROBERTA Prediction: true (confidence: 0.8226)
+LangChain Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.5000)
+--------------------------------------------------------------------------------
+11. Headline: Says U.S. Rep. Sean Duffy is among seven Tea Party freshmen who spent an average of $15,000 on cars for themselves.
+Gold Label: false
+ROBERTA Prediction: mixed (confidence: 0.4994)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: mixed (evidence verdict: false, confidence: 0.9000)
+--------------------------------------------------------------------------------
+12. Headline: "In her first appellate argument, Ms. Kagan told the court that the speech and press guarantees in the First Amendment would allow the federal government to ban the publication of pamphlets discussing political issues before an election."
+Gold Label: mixed
+ROBERTA Prediction: true (confidence: 0.5579)
+LangChain Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+--------------------------------------------------------------------------------
+13. Headline: Says Hillary Clinton wants to let people just pour in. You could have 650 million people pour in and we do nothing about it. Think of it. Thats what could happen. You triple the size of our country in one week.
+Gold Label: false
+ROBERTA Prediction: mixed (confidence: 0.4463)
+LangChain Prediction: mixed (evidence verdict: false, confidence: 0.9000)
+LangChain + WordNet Prediction: false (evidence verdict: false, confidence: 1.0000)
+--------------------------------------------------------------------------------
+14. Headline: Says uncompensated health care costs absorbed by Texas hospitals are adding $1,800 a year to Texas private insurance rates.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.6005)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: mixed (evidence verdict: mixed, confidence: 0.7000)
+--------------------------------------------------------------------------------
+15. Headline: Says drug cartels are using social media to offer rebates so more children from Central America get smuggled to the United States.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.5634)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.6000)
+LangChain + WordNet Prediction: mixed (evidence verdict: mixed, confidence: 0.6000)
+--------------------------------------------------------------------------------
+16. Headline: I dont understand what Republicans are doing against this. It was their idea. John McCain introduced cap and trade legislation three times.
+Gold Label: true
+ROBERTA Prediction: mixed (confidence: 0.5399)
+LangChain Prediction: mixed (evidence verdict: true, confidence: 0.9000)
+LangChain + WordNet Prediction: mixed (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+17. Headline: The Providence teacher contract is one of the longest in the country.
+Gold Label: false
+ROBERTA Prediction: true (confidence: 0.6643)
+LangChain Prediction: true (evidence verdict: false, confidence: 1.0000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.5000)
+--------------------------------------------------------------------------------
+18. Headline: A defense bill includes language that would require military hospitals to provide abortions on demand.
+Gold Label: false
+ROBERTA Prediction: mixed (confidence: 0.4368)
+LangChain Prediction: mixed (evidence verdict: true, confidence: 0.8000)
+LangChain + WordNet Prediction: mixed (evidence verdict: false, confidence: 0.9000)
+--------------------------------------------------------------------------------
+19. Headline: In the state legislature, I supported Second Amendment rights.
+Gold Label: true
+ROBERTA Prediction: true (confidence: 0.7962)
+LangChain Prediction: true (evidence verdict: mixed, confidence: 0.9000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.5000)
+--------------------------------------------------------------------------------
+20. Headline: The National Science Foundation spent $1.2 million paying seniors to play World of Warcraft to study the impact it had on their brain.
+Gold Label: false
+ROBERTA Prediction: mixed (confidence: 0.4648)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.9000)
+LangChain + WordNet Prediction: mixed (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+21. Headline: Congressional Budget Office says 8 (percent) unemployment till 2014!
+Gold Label: true
+ROBERTA Prediction: false (confidence: 0.9125)
+LangChain Prediction: false (evidence verdict: true, confidence: 0.9500)
+LangChain + WordNet Prediction: false (evidence verdict: mixed, confidence: 0.7000)
+--------------------------------------------------------------------------------
+22. Headline: Voter turnout for some groups in the 2008 presidential general election in Georgia was far greater than it should have been demographically.
+Gold Label: true
+ROBERTA Prediction: false (confidence: 0.6692)
+LangChain Prediction: false (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: false (evidence verdict: mixed, confidence: 0.5000)
+--------------------------------------------------------------------------------
+23. Headline: Scott Walker to cut $300 million from universities, spend $500 million on a pro basketball stadium.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.5459)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.9000)
+LangChain + WordNet Prediction: mixed (evidence verdict: mixed, confidence: 0.9000)
+--------------------------------------------------------------------------------
+24. Headline: There are at least 23 countries that refuse to take their people back after theyve been ordered to leave the United States, including large numbers of violent criminals.
+Gold Label: true
+ROBERTA Prediction: true (confidence: 0.6486)
+LangChain Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: true (evidence verdict: true, confidence: 0.9000)
+--------------------------------------------------------------------------------
+25. Headline: The U.S. has to go to plane graveyards and museums to get parts for its 20-year-old jet fighters while it sells new jets to other countries.
+Gold Label: true
+ROBERTA Prediction: true (confidence: 0.6054)
+LangChain Prediction: true (evidence verdict: true, confidence: 0.9000)
+LangChain + WordNet Prediction: true (evidence verdict: true, confidence: 0.9500)
+--------------------------------------------------------------------------------
+26. Headline: Barack Obama "rejects everyone white, including his mother and his grandparents."
+Gold Label: false
+ROBERTA Prediction: false (confidence: 0.7767)
+LangChain Prediction: false (evidence verdict: false, confidence: 0.9000)
+LangChain + WordNet Prediction: false (evidence verdict: false, confidence: 0.9000)
+--------------------------------------------------------------------------------
+27. Headline: From 2000 to 2008, we averaged about five mass shootings a year. Were now averaging 15. So thats a three-fold increase.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.5558)
+LangChain Prediction: mixed (evidence verdict: mixed, confidence: 0.8000)
+LangChain + WordNet Prediction: mixed (evidence verdict: mixed, confidence: 0.8000)
+--------------------------------------------------------------------------------
+28. Headline: This year in Congress (Connie Mack IV) has missed almost half of his votes.
+Gold Label: mixed
+ROBERTA Prediction: true (confidence: 0.7350)
+LangChain Prediction: true (evidence verdict: mixed, confidence: 0.6000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+--------------------------------------------------------------------------------
+29. Headline: Says that in polls about 2016 candidate leadership skills, he comes out two and three and four times higher than anybody else.
+Gold Label: mixed
+ROBERTA Prediction: mixed (confidence: 0.6645)
+LangChain Prediction: mixed (evidence verdict: false, confidence: 0.9000)
+LangChain + WordNet Prediction: mixed (evidence verdict: false, confidence: 0.9000)
+--------------------------------------------------------------------------------
+30. Headline: At Texas AM University, only 49 out of 3,000 faculty members brought in enough money to pay for their salaries and overhead over the past five years.
+Gold Label: false
+ROBERTA Prediction: true (confidence: 0.8050)
+LangChain Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+LangChain + WordNet Prediction: true (evidence verdict: mixed, confidence: 0.7000)
+--------------------------------------------------------------------------------
