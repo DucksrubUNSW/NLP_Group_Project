@@ -8,8 +8,7 @@ import pandas as pd
 from data_loader import load_combined
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "langchain_eval_cases.csv"
+DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "data" / "langchain_eval_cases.csv"
 
 
 def parse_args():

@@ -1,9 +1,15 @@
+#!/usr/bin/env python3
+
 # fine-tunes BERT (and optionally RoBERTa) on the combined dataset
 # also evaluates a pre-trained (non-fine-tuned) BERT for comparison
 
+import os
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+
+# relative to CODE/src/
+MODELS_DIR = os.path.join("..", "..", "MISC", "models")
 from transformers import (
     BertTokenizer,
     BertForSequenceClassification,
@@ -138,6 +144,8 @@ def main():
     print(f"\nTrain size: {len(X_train)}")
     print(f"Val size:   {len(X_val)}")
     print(f"Test size:  {len(X_test)}")
+    # make sure the models directory exists
+    os.makedirs(MODELS_DIR, exist_ok=True)
 
     # 1. pre-trained BERT without fine-tuning
     print("\n--- evaluating pre-trained BERT (no fine-tuning) ---")
@@ -165,9 +173,9 @@ def main():
     # final evaluation on held-out test set
     preds, labels = evaluate(bert_model, test_loader)
     print_results("FINE-TUNED BERT", labels, preds)
-    bert_model.save_pretrained("bert_finetuned")
-    bert_tokenizer.save_pretrained("bert_finetuned")
-    print("Fine-tuned BERT saved to bert_finetuned/")
+    bert_model.save_pretrained(os.path.join(MODELS_DIR, "bert_finetuned"))
+    bert_tokenizer.save_pretrained(os.path.join(MODELS_DIR, "bert_finetuned"))
+    print(f"Fine-tuned BERT saved to {MODELS_DIR}/bert_finetuned/")
     del bert_model
 
     # 3. fine-tuned RoBERTa
@@ -186,9 +194,9 @@ def main():
     # final evaluation on held-out test set
     preds, labels = evaluate(roberta_model, test_loader_r)
     print_results("FINE-TUNED RoBERTa", labels, preds)
-    roberta_model.save_pretrained("roberta_finetuned")
-    roberta_tokenizer.save_pretrained("roberta_finetuned")
-    print("Fine-tuned RoBERTa saved to roberta_finetuned/")
+    roberta_model.save_pretrained(os.path.join(MODELS_DIR, "roberta_finetuned"))
+    roberta_tokenizer.save_pretrained(os.path.join(MODELS_DIR, "roberta_finetuned"))
+    print(f"Fine-tuned RoBERTa saved to {MODELS_DIR}/roberta_finetuned/")
 
 if __name__ == "__main__":
     main()

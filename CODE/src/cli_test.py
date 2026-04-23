@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # Example usage:
-# python src/cli_test.py --model bert --text "The unemployment rate has dropped to its lowest point in 50 years"
-# python src/cli_test.py --model roberta --text "The unemployment rate has dropped to its lowest point in 50 years"
+# python cli_test.py --model bert --text "The unemployment rate has dropped to its lowest point in 50 years"
+# python cli_test.py --model roberta --text "The unemployment rate has dropped to its lowest point in 50 years"
 
 import argparse
 from pathlib import Path
@@ -25,7 +25,7 @@ from transformers import (
 
 
 # Free key (can sign up to gemini api free tier) - Rate limited
-os.environ["GOOGLE_API_KEY"] = ""
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDQvJQzNtX-3y1KibLTvuHbBZne03xAOss"
 
 # paid key (Course gave $50 credit)
 #os.environ["GOOGLE_API_KEY"] = ""
@@ -68,7 +68,7 @@ def google_search(query: str) -> str:
 
 agent = create_agent(model, tools=[google_search])
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+MISC_MODELS = Path(__file__).resolve().parent.parent.parent / "MISC" / "models"
 
 def analyze_headline(headline: str):
     prompt = f"""
@@ -150,13 +150,13 @@ def combine_predictions(
     return base_label
 
 def predict_baseline(text: str):
-    model = joblib.load(PROJECT_ROOT / "baseline_model.pkl")
-    vectoriser = joblib.load(PROJECT_ROOT / "baseline_vectoriser.pkl")
+    model = joblib.load(MISC_MODELS / "baseline_model.pkl")
+    vectoriser = joblib.load(MISC_MODELS / "baseline_vectoriser.pkl")
     prediction = model.predict(vectoriser.transform([text]))[0]
     return str(prediction), None
 
 def predict_bert(headline: str):
-    model_dir = PROJECT_ROOT / "bert_finetuned"
+    model_dir = MISC_MODELS / "bert_finetuned"
     tokenizer = BertTokenizer.from_pretrained(model_dir)
     model = BertForSequenceClassification.from_pretrained(model_dir).to(DEVICE)
     model.eval()
@@ -173,7 +173,7 @@ def predict_bert(headline: str):
 
 
 def predict_roberta(headline: str):
-    model_dir = PROJECT_ROOT / "roberta_finetuned"
+    model_dir = MISC_MODELS / "roberta_finetuned"
     tokenizer = RobertaTokenizer.from_pretrained(model_dir)
     model = RobertaForSequenceClassification.from_pretrained(model_dir).to(DEVICE)
     model.eval()

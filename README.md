@@ -1,85 +1,120 @@
 # Misinformation Detection in News Headlines
 
+**Team Name:** News Group
+**Course:** COMP6713 - Natural Language Processing (2026 T1)
+
+## Team Members
+
+- Lachlan Johnston (z5477322)
+- Sebastian Litchfield (z5477323)
+- Jaiden Brocklebank (z5421748)
+
+## Project Overview
+
 Detects misinformation in political news statements using NLP models trained on the LIAR and FakeNewsNet datasets. Classifies statements as **true**, **mixed**, or **false**.
 
 ## Setup
 
 ```bash
+cd CODE
 pip install -r requirements.txt
+cd src
 ```
 
-## Classifying a headline
+## Getting the Models
 
-### Baseline (TF-IDF + Logistic Regression)
+You can either train the models yourself or download pre-trained versions.
 
-Make sure you've trained the baseline first (`python src/baseline_model.py`), then:
+### Option A: Train the models
 
-```python
-import joblib
-
-model = joblib.load("baseline_model.pkl")
-vectoriser = joblib.load("baseline_vectoriser.pkl")
-
-headline = "The unemployment rate has dropped to its lowest point in 50 years"
-prediction = model.predict(vectoriser.transform([headline]))[0]
-print(prediction)  # true, mixed, or false
-```
-
-### Fine-tuned BERT
-
-Make sure you've trained BERT first (`python src/bert_model.py`), then:
-
-```python
-import torch
-from transformers import BertTokenizer, BertForSequenceClassification
-
-tokenizer = BertTokenizer.from_pretrained("bert_finetuned")
-model = BertForSequenceClassification.from_pretrained("bert_finetuned")
-model.eval()
-
-headline = "The unemployment rate has dropped to its lowest point in 50 years"
-inputs = tokenizer(headline, return_tensors="pt", truncation=True, max_length=128)
-
-with torch.no_grad():
-    outputs = model(**inputs)
-    pred = torch.argmax(outputs.logits, dim=1).item()
-
-labels = {0: "false", 1: "mixed", 2: "true"}
-print(labels[pred])
-```
-
-### Fine-tuned RoBERTa
-
-Same as BERT but swap the imports and model path:
-
-```python
-import torch
-from transformers import RobertaTokenizer, RobertaForSequenceClassification
-
-tokenizer = RobertaTokenizer.from_pretrained("roberta_finetuned")
-model = RobertaForSequenceClassification.from_pretrained("roberta_finetuned")
-model.eval()
-
-headline = "The unemployment rate has dropped to its lowest point in 50 years"
-inputs = tokenizer(headline, return_tensors="pt", truncation=True, max_length=128)
-
-with torch.no_grad():
-    outputs = model(**inputs)
-    pred = torch.argmax(outputs.logits, dim=1).item()
-
-labels = {0: "false", 1: "mixed", 2: "true"}
-print(labels[pred])
-```
-
-## Training the models
+This will take a while, especially the BERT/RoBERTa training on CPU.
 
 ```bash
-python src/baseline_model.py   # trains TF-IDF + Logistic Regression
-python src/bert_model.py        # trains BERT and RoBERTa
+python baseline_model.py
+python bert_model.py
 ```
 
-## Team
+Trained models will be saved to `MISC/models/`.
 
-- Lachlan Johnston (z5477322)
-- Sebastian Litchfield (z5477323)
-- Jaiden Brocklebank (z5421748)
+### Option B: Download pre-trained models
+
+Download the models from [OneDrive link here] and place them in the `MISC/models/` directory so the structure looks like:
+
+```
+MISC/
+└── models/
+    ├── baseline/
+    │   ├── baseline_model.pkl
+    │   └── baseline_vectoriser.pkl
+    ├── bert_finetuned/
+    └── roberta_finetuned/
+```
+
+## Classifying a Headline
+
+Once the models are available, you can test all three on a headline by editing the `HEADLINE` variable in `test_models.py` and running:
+
+```bash
+python test_models.py
+```
+
+## CLI with LangChain Fact-Checking
+
+`cli_test.py` runs a headline through a model and then uses LangChain + Google Search to fact-check it against external sources.
+
+### API Keys
+
+You'll need two API keys. Open `cli_test.py` and paste them into the relevant lines at the top of the file:
+
+1. **Google Gemini API key** (free tier available)
+   - Go to https://aistudio.google.com/apikey
+   - Click "Create API key"
+   - Copy the key and paste it into the `GOOGLE_API_KEY` line
+
+2. **Serper API key** (for Google Search)
+   - Go to https://serper.dev and sign up
+   - Copy your API key and paste it into the `SERPER_API_KEY` line
+
+### Usage
+
+```bash
+python cli_test.py --model bert --text "The unemployment rate has dropped to its lowest point in 50 years"
+python cli_test.py --model roberta --text "The unemployment rate has dropped to its lowest point in 50 years"
+python cli_test.py --model baseline --text "The unemployment rate has dropped to its lowest point in 50 years"
+```
+
+## Running Tests
+
+```bash
+python -m pytest test_headline_predictions.py -v
+```
+
+Results are saved to `MISC/test_results/headline_results.txt`.
+
+## Directory Structure
+
+```
+NewsGroup/
+├── README.md
+├── CONTRIBUTION.md
+├── REPORT.docx
+├── PRESENTATION.pdf
+├── CODE/
+│   ├── requirements.txt
+│   └── src/
+│       ├── data_loader.py
+│       ├── baseline_model.py
+│       ├── bert_model.py
+│       ├── test_models.py
+│       ├── test_headline_predictions.py
+│       └── cli_test.py
+└── MISC/
+    ├── data/
+    │   ├── liar/
+    │   └── fakenewsnet/
+    ├── models/
+    │   ├── baseline/
+    │   ├── bert_finetuned/
+    │   └── roberta_finetuned/
+    └── test_results/
+```

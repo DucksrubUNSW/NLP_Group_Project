@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # loads and combines the LIAR and FakeNewsNet (PolitiFact) datasets
 # labels are mapped to three classes: true, mixed, false
 
@@ -41,7 +43,7 @@ def load_liar(data_dir="data/liar"):
 
     return pd.concat(frames, ignore_index=True)
 
-def load_fakenewsnet(data_dir="data/fakenewsnet"):
+def load_fakenewsnet(data_dir="../../MISC/data/fakenewsnet"):
     # loads the PolitiFact portion of FakeNewsNet from local csvs
     frames = []
     for label_type in ["real", "fake"]:
@@ -57,7 +59,7 @@ def load_fakenewsnet(data_dir="data/fakenewsnet"):
 
     return pd.concat(frames, ignore_index=True)
 
-def load_combined(data_dir_liar="data/liar", data_dir_fnn="data/fakenewsnet"):
+def load_combined(data_dir_liar="../../MISC/data/liar", data_dir_fnn="../../MISC/data/fakenewsnet"):
     # loads both datasets and merges them into one dataframe
     liar_df = load_liar(data_dir_liar)
     fnn_df = load_fakenewsnet(data_dir_fnn)

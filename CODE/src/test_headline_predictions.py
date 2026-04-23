@@ -1,6 +1,12 @@
+#!/usr/bin/env python3
+
+# checks predictions of fine-tuned BERT and RoBERTa on known true/false headlines
+# current pass rate is 27/40
+# usage: cd CODE/src && python -m pytest test_headline_predictions.py -v
+
+import os
 import pytest
 import torch
-from pathlib import Path
 from transformers import (
     BertTokenizer,
     BertForSequenceClassification,
@@ -9,10 +15,22 @@ from transformers import (
 )
 
 LABELS = {0: "false", 1: "mixed", 2: "true"}
+MODELS_DIR = os.path.join("..", "..", "MISC", "models")
+RESULTS_DIR = os.path.join("..", "..", "MISC", "test_results")
+RESULTS_FILE = os.path.join(RESULTS_DIR, "headline_results.txt")
+BERT_DIR = os.path.join(MODELS_DIR, "bert_finetuned")
+ROBERTA_DIR = os.path.join(MODELS_DIR, "roberta_finetuned")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BERT_DIR = PROJECT_ROOT / "bert_finetuned"
-ROBERTA_DIR = PROJECT_ROOT / "roberta_finetuned"
+os.makedirs(RESULTS_DIR, exist_ok=True)
+
+# stores results as tests run, writes to file at the end
+_results = []
+
+@pytest.fixture(autouse=True)
+def record_result(request):
+    yield
+    outcome = "PASSED" if request.node.rep_call.passed else "FAILED"
+    _results.append(f"{outcome} - {request.node.name}")
 
 
 DEVICE = torch.device(
@@ -23,39 +41,27 @@ DEVICE = torch.device(
     else "cpu"
 )
 
-# These tests check the predictions of the fine-tuned BERT and RoBERTa models on a set of 10 true and 10 false headlines. The current pass rate is 27/40.
-# Useful for evaluation stage of assignment
-# Usage: python -m pytest tests/test_headline_predictions.py -v
-
 def predict_bert(text: str) -> str:
     tokenizer = BertTokenizer.from_pretrained(BERT_DIR)
     model = BertForSequenceClassification.from_pretrained(BERT_DIR).to(DEVICE)
     model.eval()
-
     inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
     inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
-
     with torch.no_grad():
         logits = model(**inputs).logits
         pred_id = int(torch.argmax(logits, dim=1).item())
     return LABELS.get(pred_id, str(pred_id))
-
 
 def predict_roberta(text: str) -> str:
     tokenizer = RobertaTokenizer.from_pretrained(ROBERTA_DIR)
     model = RobertaForSequenceClassification.from_pretrained(ROBERTA_DIR).to(DEVICE)
     model.eval()
-
     inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
     inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
-
     with torch.no_grad():
         logits = model(**inputs).logits
         pred_id = int(torch.argmax(logits, dim=1).item())
     return LABELS.get(pred_id, str(pred_id))
-
-
-# Pass rate without langchain - 27/40
 
 TRUE_CASES = [
     "Watch Carrie Underwood Open Super Bowl 52 With Her New Video for \u201cThe Champion\u201d",
@@ -83,21 +89,17 @@ FALSE_CASES = [
     "Miley Cyrus Claims \u2018Satan Is A Nice Guy; He\u2019s Misunderstood\u2019",
 ]
 
-
 @pytest.mark.parametrize("headline", TRUE_CASES)
 def test_true_cases_with_bert(headline: str):
     assert predict_bert(headline) == "true"
-
 
 @pytest.mark.parametrize("headline", TRUE_CASES)
 def test_true_cases_with_roberta(headline: str):
     assert predict_roberta(headline) == "true"
 
-
 @pytest.mark.parametrize("headline", FALSE_CASES)
 def test_false_cases_with_bert(headline: str):
     assert predict_bert(headline) == "false"
-
 
 @pytest.mark.parametrize("headline", FALSE_CASES)
 def test_false_cases_with_roberta(headline: str):
