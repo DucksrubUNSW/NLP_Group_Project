@@ -38,7 +38,7 @@ Trained models will be saved to `MISC/models/`.
 
 ### Option B: Download pre-trained models
 
-Download the models from [OneDrive link here] and place them in the `MISC/models/` directory so the structure looks like:
+Download the models from [\[Models\]](https://drive.google.com/file/d/1NwbpDr42JVU8C4C--t8SmLaKSikfS77F/view?usp=sharing) and place them in the `MISC/models/` directory so the structure looks like:
 
 ```
 MISC/

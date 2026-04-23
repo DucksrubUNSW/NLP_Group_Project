@@ -25,7 +25,7 @@ from transformers import (
 
 
 # Free key (can sign up to gemini api free tier) - Rate limited
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDQvJQzNtX-3y1KibLTvuHbBZne03xAOss"
+os.environ["GOOGLE_API_KEY"] = ""
 
 # paid key (Course gave $50 credit)
 #os.environ["GOOGLE_API_KEY"] = ""
