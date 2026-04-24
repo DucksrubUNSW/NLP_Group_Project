@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-# Usage: python demo.py
+# Gradio web demo for fake news detection
+# supports baseline, BERT, and RoBERTa models with optional LangChain RAG fact-checking
+# usage: python demo.py
 
 import os
 import gradio as gr
@@ -127,6 +129,7 @@ Headline: {headline}
     return report
 
 
+# merges base model and RAG verdicts — RAG only overrides the base when it's confident and the base isn't
 def combine_predictions(base_label, base_confidence, evidence_report):
     if evidence_report is None:
         return base_label
@@ -256,4 +259,4 @@ with gr.Blocks(title="Fake News Detector", theme=gr.themes.Soft(), css=CUSTOM_CS
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(inbrowser=True)

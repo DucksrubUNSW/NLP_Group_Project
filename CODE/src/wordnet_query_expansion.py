@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# expands a search query with synonym substitutions using WordNet + a safe fallback list
+# used by cli_test.py to generate richer retrieval queries for fact-checking
+
 import re
 
 
@@ -50,10 +55,12 @@ SAFE_SYNONYMS = {
 }
 
 
+# strips punctuation and lowercases a token for lookup
 def _normalise_token(token: str) -> str:
     return re.sub(r"[^A-Za-z-]", "", token).lower()
 
 
+# returns True if a token is worth expanding (not a stopword, number, or acronym)
 def _is_expandable(token: str) -> bool:
     cleaned = _normalise_token(token)
     return (
@@ -64,6 +71,7 @@ def _is_expandable(token: str) -> bool:
     )
 
 
+# looks up synonyms via WordNet, returns empty list if nltk is unavailable
 def _wordnet_synonyms(word: str, max_synonyms: int = 2) -> list[str]:
     try:
         from nltk.corpus import wordnet as wn
@@ -87,6 +95,7 @@ def _wordnet_synonyms(word: str, max_synonyms: int = 2) -> list[str]:
     return synonyms
 
 
+# returns synonyms for a word, preferring the safe fallback list over WordNet
 def get_query_synonyms(word: str, max_synonyms: int = 2) -> list[str]:
     cleaned = _normalise_token(word)
     synonyms = SAFE_SYNONYMS.get(cleaned, []).copy()
@@ -98,6 +107,7 @@ def get_query_synonyms(word: str, max_synonyms: int = 2) -> list[str]:
     return synonyms[:max_synonyms]
 
 
+# generates up to max_queries variants of a query by swapping in synonyms one word at a time
 def expand_search_queries(query: str, max_queries: int = MAX_QUERIES) -> list[str]:
     words = query.split()
     queries = [query]

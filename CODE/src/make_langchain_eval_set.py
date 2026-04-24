@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# samples a balanced eval set from the held-out test split for LangChain evaluation
+# usage: python make_langchain_eval_set.py --per-label 10
+
 import argparse
 from pathlib import Path
 
@@ -13,6 +16,7 @@ DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "data"
 TEST_SPLIT_RANDOM_STATE = 42
 
 
+# parses CLI arguments for sample size, output path, and random seed
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(

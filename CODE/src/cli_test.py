@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-# Example usage:
-# python cli_test.py --model bert --text "The unemployment rate has dropped to its lowest point in 50 years"
-# python cli_test.py --model roberta --text "The unemployment rate has dropped to its lowest point in 50 years"
+# CLI tool for classifying a single headline using a saved model + optional LangChain RAG
+# usage:
+#   python cli_test.py --model bert --text "Headline here"
+#   python cli_test.py --model roberta --text "Headline here" --use-wordnet
 
 import argparse
 from pathlib import Path
@@ -82,6 +83,7 @@ wordnet_agent = create_agent(model, tools=[google_search_wordnet])
 
 MISC_MODELS = Path(__file__).resolve().parent.parent.parent / "MISC" / "models"
 
+# runs the LangChain agent to fact-check a headline and returns a binary real/fake report
 def analyze_headline(headline: str):
     prompt = f"""
 You are an expert adversarial fact-checker. Your goal is to debunk misinformation. Do not trust the headline's tone.
@@ -102,6 +104,8 @@ Headline: {headline}
     return final_report
 
 
+# runs the LangChain agent for three-class (true/mixed/false) fact-checking
+# optionally uses WordNet-expanded queries to retrieve broader evidence
 def analyze_headline_three_class(
     headline: str,
     base_label: str,
@@ -167,12 +171,14 @@ def combine_predictions(
 
     return base_label
 
+# loads and runs the saved TF-IDF baseline model on a single text
 def predict_baseline(text: str):
     model = joblib.load(MISC_MODELS / "baseline_model.pkl")
     vectoriser = joblib.load(MISC_MODELS / "baseline_vectoriser.pkl")
     prediction = model.predict(vectoriser.transform([text]))[0]
     return str(prediction), None
 
+# loads and runs the fine-tuned BERT model, returns label + confidence
 def predict_bert(headline: str):
     model_dir = MISC_MODELS / "bert_finetuned"
     tokenizer = BertTokenizer.from_pretrained(model_dir)
@@ -190,6 +196,7 @@ def predict_bert(headline: str):
     return LABELS.get(pred_id, str(pred_id)), confidence
 
 
+# loads and runs the fine-tuned RoBERTa model, returns label + confidence
 def predict_roberta(headline: str):
     model_dir = MISC_MODELS / "roberta_finetuned"
     tokenizer = RobertaTokenizer.from_pretrained(model_dir)
@@ -207,6 +214,7 @@ def predict_roberta(headline: str):
     return LABELS.get(pred_id, str(pred_id)), confidence
 
 
+# parses CLI arguments for model choice, input text, and WordNet flag
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(

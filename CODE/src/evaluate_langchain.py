@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# compares base transformer predictions vs LangChain-augmented predictions on a held-out eval set
+# supports both standard retrieval and WordNet-expanded retrieval side by side
+# usage: python evaluate_langchain.py --model roberta --input path/to/eval.csv
+
 import argparse
 from collections import Counter
 from pathlib import Path
@@ -15,12 +19,14 @@ DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent.parent / "MISC" / "test_
 LABEL_ORDER = ["false", "mixed", "true"]
 
 
+# thin wrapper so evaluate() can call predict without knowing which model is selected
 def predict(model_name: str, text: str):
     if model_name == "bert":
         return predict_bert(text)
     return predict_roberta(text)
 
 
+# parses CLI arguments for model selection, input path, row limit, and output path
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -50,6 +56,7 @@ def parse_args():
     return parser.parse_args()
 
 
+# runs all three pipelines (base, LangChain, LangChain+WordNet) on every row in the dataframe
 def evaluate(df: pd.DataFrame, model_name: str):
     y_true = []
     y_base = []
@@ -144,6 +151,7 @@ def evaluate(df: pd.DataFrame, model_name: str):
     )
 
 
+# prints accuracy, classification report, and confusion matrix with a section header
 def print_metrics(title: str, y_true: list[str], y_pred: list[str]):
     print(f"\n{'=' * 60}")
     print(title)
@@ -155,6 +163,7 @@ def print_metrics(title: str, y_true: list[str], y_pred: list[str]):
     print(confusion_matrix(y_true, y_pred, labels=LABEL_ORDER))
 
 
+# writes a per-example breakdown (base + LangChain + WordNet predictions) to a text file
 def write_prediction_report(
     output_path: Path,
     model_name: str,
