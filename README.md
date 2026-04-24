@@ -124,11 +124,14 @@ NewsGroup/
 │       ├── conftest.py
 │       ├── demo.py
 │       ├── evaluate_langchain.py
+│       ├── evaluate_models.py
 │       ├── make_langchain_eval_set.py
 │       ├── test_headline_predictions.py
+│       ├── wordnet_query_expansion.py
 │       └── test_models.py
 └── MISC/
     ├── data/
+    │   ├── langchain_eval_cases.csv
     │   ├── liar/
     │   └── fakenewsnet/
     ├── models/
